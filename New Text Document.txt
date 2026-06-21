@@ -1,16 +1,1 @@
-In Part 9 of our MERN Stack Inventory Management System series, we build the Admin Dashboard Overview.
 
-This dashboard provides a complete real-time summary of the system, helping administrators monitor business performance and inventory status efficiently.
-
-📊 Dashboard Features:
-
-Total Products
-Total Stock Available
-Total Suppliers
-Total Orders
-Total Revenue
-Low Stock Products Alert
-High Selling Products
-Out of Stock Products
-
-By the end of this part, you’ll have a fully functional admin dashboard that gives clear insights into your inventory system using data from your Node.js & MongoDB backend and a responsive React frontend.
