@@ -20,7 +20,7 @@ async function test() {
     const loginData = await loginRes.json();
     if (!loginData.success) throw new Error('Login failed: ' + loginData.message);
     const token = loginData.token;
-    console.log('✅ Login successful\n');
+    console.log(' Login successful\n');
 
     const authHeaders = {
       'Authorization': `Bearer ${token}`,
@@ -28,22 +28,22 @@ async function test() {
     };
 
     // 2. Get Products (with categories & suppliers)
-    console.log('2️⃣  Testing GET /api/products...');
+    console.log(' Testing GET /api/products...');
     const productsRes = await fetch(`${base}/api/products`, { headers: authHeaders });
     const productsData = await productsRes.json();
-    console.log(`✅ Products: ${productsData.products?.length || 0} items`);
-    console.log(`✅ Categories: ${productsData.categories?.length || 0} items`);
-    console.log(`✅ Suppliers: ${productsData.suppliers?.length || 0} items\n`);
+    console.log(` Products: ${productsData.products?.length || 0} items`);
+    console.log(`Categories: ${productsData.categories?.length || 0} items`);
+    console.log(`Suppliers: ${productsData.suppliers?.length || 0} items\n`);
 
     if (!productsData.categories?.length) {
-      console.warn('⚠️  No categories found. Run seed script: node server/seed.js\n');
+      console.warn(' No categories found. Run seed script: node server/seed.js\n');
     }
     if (!productsData.suppliers?.length) {
-      console.warn('⚠️  No suppliers found. Run seed script: node server/seed.js\n');
+      console.warn(' No suppliers found. Run seed script: node server/seed.js\n');
     }
 
     // 3. Create Product
-    console.log('3️⃣  Testing POST /api/products/add...');
+    console.log(' Testing POST /api/products/add...');
     const productRes = await fetch(`${base}/api/products/add`, {
       method: 'POST',
       headers: authHeaders,
@@ -58,16 +58,16 @@ async function test() {
     });
     const productData = await productRes.json();
     if (productRes.ok && productData.success) {
-      console.log('✅ Product created successfully\n');
+      console.log(' Product created successfully\n');
     } else {
-      console.error('❌ Product creation failed:', productData.message, '\n');
+      console.error(' Product creation failed:', productData.message, '\n');
     }
 
-    console.log('✅ All tests passed! MERN integration is working correctly.\n');
+    console.log(' All tests passed! MERN integration is working correctly.\n');
 
   } catch (error) {
-    console.error('❌ Test failed:', error.message);
-    console.log('\n🔧 Troubleshooting:');
+    console.error(' Test failed:', error.message);
+    console.log('\n Troubleshooting:');
     console.log('   - Ensure backend is running: node server/index.js');
     console.log('   - Ensure MongoDB is running');
     console.log('   - Check .env file has correct MONGODB_URI and JWT_SECRET');
