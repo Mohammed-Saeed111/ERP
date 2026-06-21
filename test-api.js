@@ -7,11 +7,11 @@
 const base = 'http://localhost:5000';
 
 async function test() {
-  console.log('🧪 Testing MERN API Integration...\n');
+  console.log(' Testing MERN API Integration...\n');
 
   try {
     // 1. Login
-    console.log('1️⃣  Testing Login...');
+    console.log(' Testing Login...');
     const loginRes = await fetch(`${base}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
