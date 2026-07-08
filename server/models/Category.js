@@ -8,7 +8,13 @@ const categorySchema = new mongoose.Schema({
   categoryDescription: {
     type: String,
     required: true
+  },
+  isHidden: {
+    type: Boolean,
+    default: false
   }
+}, {
+  timestamps: true
 });
 
 const CategoryModel = mongoose.model('Category', categorySchema);

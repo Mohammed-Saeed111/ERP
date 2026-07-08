@@ -4,14 +4,14 @@ import ProductModel from '../models/Product.js';
 
 export const addCategory = async (req, res) => {
   try {
-    const { categoryName, categoryDescription } = req.body;
+    const { categoryName, categoryDescription, isHidden = false } = req.body;
 
     const existingCategory = await Category.findOne({ categoryName });
     if (existingCategory) {
       return res.json({ success: false, message: "category already exist" });
     }
 
-    const newCategory = new Category({ categoryName, categoryDescription });
+    const newCategory = new Category({ categoryName, categoryDescription, isHidden });
     await newCategory.save();
 
     return res.json({ success: true, message: "category added successfully" });
@@ -22,7 +22,7 @@ export const addCategory = async (req, res) => {
 
 export const getCategories = async (req, res) => {
   try {
-    const categories = await Category.find();
+    const categories = await Category.find().sort({ categoryName: 1 });
     return res.json({ success: true, categories });
   } catch (error) {
     return res.json({ success: false, message: "server error" });
@@ -32,11 +32,12 @@ export const getCategories = async (req, res) => {
 export const updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { categoryName, categoryDescription } = req.body;
+    const { categoryName, categoryDescription, isHidden } = req.body;
 
     const updatedCategory = await Category.findByIdAndUpdate(id, {
       categoryName,
-      categoryDescription
+      categoryDescription,
+      ...(typeof isHidden === 'boolean' ? { isHidden } : {})
     });
 
     if (!updatedCategory) {
