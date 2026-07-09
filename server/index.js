@@ -22,7 +22,24 @@ import dashboardRoutes from './routes/dashboard.js';
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+// Allow front-end dev servers on both default Vite ports and enable credentials
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+];
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        return callback(null, true);
+      }
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  })
+);
 
 app.use('/api/auth', authRouter);
 app.use('/api/category', categoryRoutes);
@@ -46,7 +63,8 @@ const ensureDefaultUsers = async () => {
       email: defaultAdminEmail,
       password: hashPassword,
       address: 'admin address',
-      role: 'admin'
+      role: 'admin',
+      status: 'active'
     });
     console.log(`Default admin created: ${defaultAdminEmail} / admin`);
   }
@@ -59,7 +77,8 @@ const ensureDefaultUsers = async () => {
       email: defaultUserEmail,
       password: hashPassword,
       address: 'Test address',
-      role: 'customer'
+      role: 'customer',
+      status: 'active'
     });
     console.log(`Default customer created: ${defaultUserEmail} / user`);
   }

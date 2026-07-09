@@ -210,6 +210,13 @@ const Categories = () => {
   };
 
   const handleDelete = async (id) => {
+    // Prevent deleting a category that still has products (client-side guard)
+    const enrichedCategory = stats.enriched.find((c) => c._id === id) || categories.find((c) => c._id === id);
+    if (enrichedCategory && (enrichedCategory.productCount || 0) > 0) {
+      showToast('error', 'Cannot delete category with associated products. Remove or reassign its products first.');
+      return;
+    }
+
     if (!window.confirm('Are you sure you want to delete this category?')) return;
 
     try {

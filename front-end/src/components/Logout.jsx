@@ -7,15 +7,15 @@ const Logout = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleLogout = () => {
-      logout();
-      navigate('/login', { replace: true }); // يمنع الرجوع للصفحة السابقة
-    };
-
-    handleLogout();
+    logout();
+    navigate('/login', { replace: true }); // يمنع الرجوع للصفحة السابقة
   }, [logout, navigate]);
 
-  return null;
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p className="text-lg font-medium">جاري تسجيل الخروج...</p>
+    </div>
+  );
 };
 
 export default Logout;

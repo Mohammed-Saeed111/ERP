@@ -27,13 +27,7 @@ const Products = () => {
       if (response.data.success) {
         setProducts(response.data.products || []);
         setFilteredProducts(response.data.products || []);
-        setCategories(response.data.categories || []);
-        setSuppliers(response.data.suppliers || []);
-        console.log('✓ Data fetched successfully', {
-          productsCount: response.data.products?.length,
-          categoriesCount: response.data.categories?.length,
-          suppliersCount: response.data.suppliers?.length,
-        });
+        console.log('✓ Products loaded', { productsCount: response.data.products?.length });
       }
     } catch (error) {
       console.error('✗ Error fetching products:', error.response?.data || error.message);
@@ -43,9 +37,33 @@ const Products = () => {
     }
   }, []);
 
+  const fetchCategories = useCallback(async () => {
+    try {
+      const response = await api.get('/api/category');
+      if (response.data.success) {
+        setCategories(response.data.categories || []);
+      }
+    } catch (error) {
+      console.error('✗ Error fetching categories:', error.response?.data || error.message);
+    }
+  }, []);
+
+  const fetchSuppliers = useCallback(async () => {
+    try {
+      const response = await api.get('/api/supplier');
+      if (response.data.success) {
+        setSuppliers(response.data.suppliers || []);
+      }
+    } catch (error) {
+      console.error('✗ Error fetching suppliers:', error.response?.data || error.message);
+    }
+  }, []);
+
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]);
+    fetchCategories();
+    fetchSuppliers();
+  }, [fetchProducts, fetchCategories, fetchSuppliers]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

@@ -20,9 +20,11 @@ const CustomerProducts = () => {
   const [openModal, setOpenModal] = useState(false);
   const [toast, setToast] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [orderCart, setOrderCart] = useState([]);
   const [orderData, setOrderData] = useState({
     productID: '',
     name: '',
+    category: '',
     price: 0,
     stock: 0,
     quantity: 1,
@@ -92,6 +94,19 @@ const CustomerProducts = () => {
     [products, categories]
   );
 
+  const cartSummary = useMemo(
+    () => {
+      const totalQuantity = orderCart.reduce((sum, item) => sum + item.quantity, 0);
+      const totalPrice = orderCart.reduce((sum, item) => sum + item.total, 0);
+      return {
+        itemCount: orderCart.length,
+        totalQuantity,
+        totalPrice
+      };
+    },
+    [orderCart]
+  );
+
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
   };
@@ -112,6 +127,7 @@ const CustomerProducts = () => {
     setOrderData({
       productID: product._id,
       name: product.name || '',
+      category: product.category?.name || product.categoryId?.categoryName || 'Uncategorized',
       price,
       stock,
       quantity: 1,
@@ -140,6 +156,59 @@ const CustomerProducts = () => {
     });
   };
 
+  const addToCart = () => {
+    if (!orderData.productID) return;
+
+    setOrderCart((prev) => {
+      const existingIndex = prev.findIndex((item) => item.productID === orderData.productID);
+      if (existingIndex >= 0) {
+        const updated = [...prev];
+        const existing = updated[existingIndex];
+        const nextQuantity = Math.min(existing.quantity + orderData.quantity, orderData.stock);
+        updated[existingIndex] = {
+          ...existing,
+          quantity: nextQuantity,
+          total: nextQuantity * existing.price
+        };
+        return updated;
+      }
+
+      return [
+        ...prev,
+        {
+          productID: orderData.productID,
+          name: orderData.name,
+          price: orderData.price,
+          stock: orderData.stock,
+          quantity: orderData.quantity,
+          total: orderData.total,
+          category: orderData.category
+        }
+      ];
+    });
+
+    setToast({ type: 'success', message: `${orderData.name} added to cart.` });
+    closeModal();
+  };
+
+  const removeFromCart = (productID) => {
+    setOrderCart((prev) => prev.filter((item) => item.productID !== productID));
+  };
+
+  const changeCartQuantity = (productID, quantity) => {
+    setOrderCart((prev) =>
+      prev.map((item) => {
+        if (item.productID !== productID) return item;
+        const nextQuantity = Math.min(Math.max(Number(quantity), 1), item.stock || 1);
+        return {
+          ...item,
+          quantity: nextQuantity,
+          total: nextQuantity * item.price
+        };
+      })
+    );
+  };
+
   const handleQuantityInput = (event) => {
     const nextQuantity = Number(event.target.value) || 1;
     const clampedQuantity = Math.min(Math.max(nextQuantity, 1), orderData.stock || 1);
@@ -151,19 +220,20 @@ const CustomerProducts = () => {
   };
 
   const handleSubmit = async () => {
-    if (!orderData.productID) return;
+    if (orderCart.length === 0) {
+      setToast({ type: 'error', message: 'Please add at least one item to the cart.' });
+      return;
+    }
 
     try {
       setSubmitting(true);
       const response = await api.post('/api/orders/add', {
-        productID: orderData.productID,
-        quantity: orderData.quantity,
-        total: orderData.total
+        orderItems: orderCart.map((item) => ({ productID: item.productID, quantity: item.quantity }))
       });
 
       if (response.data.success) {
         setToast({ type: 'success', message: response.data.message || 'Order placed successfully.' });
-        closeModal();
+        setOrderCart([]);
         fetchProducts();
       } else {
         setToast({ type: 'error', message: response.data.message || 'Unable to place order.' });
@@ -233,6 +303,84 @@ const CustomerProducts = () => {
           Reset filters
         </button>
       </div>
+
+      {orderCart.length > 0 && (
+        <div className="mb-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900">Cart ({orderCart.length} items)</h3>
+              <p className="text-sm text-slate-500">Order multiple products in a single request.</p>
+            </div>
+            <div className="inline-flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="rounded-3xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition disabled:opacity-60"
+              >
+                {submitting ? 'Placing order...' : 'Place order'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setOrderCart([])}
+                className="rounded-3xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+              >
+                Clear cart
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4 overflow-x-auto">
+            <table className="min-w-full text-left">
+              <thead className="bg-slate-100 text-slate-600">
+                <tr>
+                  <th className="px-4 py-3 text-sm font-medium">Product</th>
+                  <th className="px-4 py-3 text-sm font-medium">Qty</th>
+                  <th className="px-4 py-3 text-sm font-medium">Unit</th>
+                  <th className="px-4 py-3 text-sm font-medium">Total</th>
+                  <th className="px-4 py-3 text-sm font-medium">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orderCart.map((item) => (
+                  <tr key={item.productID} className="border-b border-slate-200">
+                    <td className="px-4 py-4 text-slate-800">{item.name}</td>
+                    <td className="px-4 py-4">
+                      <input
+                        type="number"
+                        min="1"
+                        max={item.stock}
+                        value={item.quantity}
+                        onChange={(e) => changeCartQuantity(item.productID, e.target.value)}
+                        className="w-20 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none"
+                      />
+                    </td>
+                    <td className="px-4 py-4 text-slate-900">${item.price.toFixed(2)}</td>
+                    <td className="px-4 py-4 text-slate-900">${item.total.toFixed(2)}</td>
+                    <td className="px-4 py-4 text-slate-500">{item.category || 'Uncategorized'}</td>
+                    <td className="px-4 py-4">
+                      <button
+                        type="button"
+                        onClick={() => removeFromCart(item.productID)}
+                        className="rounded-full bg-rose-100 px-3 py-1 text-sm font-semibold text-rose-700 hover:bg-rose-200 transition"
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                <tr className="bg-slate-100">
+                  <td className="px-4 py-3 text-slate-700 font-semibold">Total</td>
+                  <td className="px-4 py-3 text-slate-700 font-semibold">{cartSummary.totalQuantity}</td>
+                  <td className="px-4 py-3" />
+                  <td className="px-4 py-3 font-semibold text-slate-900">${cartSummary.totalPrice.toFixed(2)}</td>
+                  <td className="px-4 py-3" />
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -415,11 +563,11 @@ const CustomerProducts = () => {
               </button>
               <button
                 type="button"
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="rounded-3xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={addToCart}
+                disabled={orderData.stock <= 0}
+                className={`rounded-3xl px-4 py-2 text-sm font-semibold text-white transition ${orderData.stock > 0 ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-300 cursor-not-allowed'}`}
               >
-                {submitting ? 'Placing order...' : 'Confirm order'}
+                {orderData.stock > 0 ? 'Add to cart' : 'Out of stock'}
               </button>
             </div>
           </div>

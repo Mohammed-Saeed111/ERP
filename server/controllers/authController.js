@@ -24,11 +24,21 @@ export const login = async (req, res) => {
             });
         }
 
+        if (user.status !== 'active') {
+            return res.status(403).json({
+                success: false,
+                message: "Account is disabled"
+            });
+        }
+
         const token = jwt.sign(
             { id: user._id, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );
+
+        user.lastLogin = new Date();
+        await user.save();
 
         return res.status(200).json({
             success: true,

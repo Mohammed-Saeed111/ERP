@@ -6,7 +6,7 @@ const CustomerDashboard = () => {
     <div className="flex">
       <Sidebar />
 
-      <div className="flex-1 ml-16 md:ml-64 bg-gray-100 min-h-screen">
+      <div className="flex-1 ml-16 md:ml-64 bg-gray-100 dark:bg-slate-900 min-h-screen">
         <Outlet />
       </div>
     </div>
