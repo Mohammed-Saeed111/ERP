@@ -8,8 +8,13 @@ const AuthContext = createContext(null);
 /* eslint-disable react/prop-types */
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(() => {
-        const storedUser = localStorage.getItem('POS_user');
-        return storedUser ? JSON.parse(storedUser) : null;
+        try {
+            const storedUser = localStorage.getItem('POS_user');
+            return storedUser ? JSON.parse(storedUser) : null;
+        } catch {
+            localStorage.removeItem('POS_user');
+            return null;
+        }
     });
 
     const login = (userData, token) => {

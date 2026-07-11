@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { FiActivity, FiDatabase, FiPackage, FiShield } from 'react-icons/fi';
+import { FiActivity, FiDatabase, FiPackage, FiShield, FiEye, FiEyeOff } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -84,7 +85,7 @@ const Login = () => {
 
         <div className="rounded-4xl bg-white p-10 shadow-xl border border-slate-200">
           <div className="mb-8">
-            <h2 className="text-3xl font-semibold text-slate-900">Sign In</h2>
+            <h2 className="text-3xl font-semibold text-slate-900">Login</h2>
             <p className="mt-2 text-slate-500">Use your company credentials to access the ERP dashboard.</p>
           </div>
 
@@ -109,14 +110,24 @@ const Login = () => {
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-slate-700">Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                placeholder="Password"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  placeholder="Password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((p) => !p)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <FiEyeOff className="h-4 w-4" /> : <FiEye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
 
             <button
@@ -129,7 +140,7 @@ const Login = () => {
           </form>
 
           <p className="mt-8 text-center text-sm text-slate-500">
-            Don’t have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link to="/register" className="font-semibold text-blue-600 hover:underline">Create one</Link>
           </p>
         </div>

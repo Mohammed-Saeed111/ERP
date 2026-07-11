@@ -290,13 +290,13 @@ const Categories = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 p-4 sm:p-6 md:p-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8 rounded-4xl bg-white p-6 shadow-xl shadow-slate-200/60 ring-1 ring-slate-200">
+        <div className="mb-8 rounded-4xl bg-white dark:bg-slate-800 p-6 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 ring-1 ring-slate-200 dark:ring-slate-700">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-3xl font-semibold text-slate-900">Category Management</h2>
-              <p className="mt-2 text-sm text-slate-500">Track category usage, hide unused groups, and manage them efficiently.</p>
+              <h2 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">Category Management</h2>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Track category usage, hide unused groups, and manage them efficiently.</p>
             </div>
             <div className="flex w-full flex-col gap-3 sm:w-96 sm:flex-row">
               <input
@@ -304,12 +304,12 @@ const Categories = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search categories..."
-                className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 shadow-sm transition focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-200"
+                className="w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 dark:text-slate-200 px-4 py-3 text-slate-700 shadow-sm transition focus:border-blue-500 focus:bg-white dark:focus:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
               />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 shadow-sm transition focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-200"
+                className="rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 dark:text-slate-200 px-4 py-3 text-slate-700 shadow-sm transition focus:border-blue-500 focus:bg-white dark:focus:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
               >
                 <option value="name">Sort by name</option>
                 <option value="products">Sort by products</option>
@@ -319,22 +319,22 @@ const Categories = () => {
         </div>
 
         <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-3xl bg-white p-5 shadow-lg shadow-slate-200/50 ring-1 ring-slate-200">
-            <p className="text-sm font-medium text-slate-500">Total categories</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">{stats.totalCategories}</p>
+          <div className="rounded-3xl bg-white dark:bg-slate-800 p-5 shadow-lg shadow-slate-200/50 ring-1 ring-slate-200 dark:ring-slate-700">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total categories</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-slate-100">{stats.totalCategories}</p>
           </div>
-          <div className="rounded-3xl bg-white p-5 shadow-lg shadow-slate-200/50 ring-1 ring-slate-200">
-            <p className="text-sm font-medium text-slate-500">Used categories</p>
+          <div className="rounded-3xl bg-white dark:bg-slate-800 p-5 shadow-lg shadow-slate-200/50 ring-1 ring-slate-200 dark:ring-slate-700">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Used categories</p>
             <p className="mt-2 text-3xl font-semibold text-emerald-600">{stats.usedCategories}</p>
           </div>
-          <div className="rounded-3xl bg-white p-5 shadow-lg shadow-slate-200/50 ring-1 ring-slate-200">
-            <p className="text-sm font-medium text-slate-500">Empty categories</p>
+          <div className="rounded-3xl bg-white dark:bg-slate-800 p-5 shadow-lg shadow-slate-200/50 ring-1 ring-slate-200 dark:ring-slate-700">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Empty categories</p>
             <p className="mt-2 text-3xl font-semibold text-amber-600">{stats.emptyCategories}</p>
           </div>
-          <div className="rounded-3xl bg-white p-5 shadow-lg shadow-slate-200/50 ring-1 ring-slate-200">
-            <p className="text-sm font-medium text-slate-500">Most used</p>
-            <p className="mt-2 text-lg font-semibold text-slate-900">{stats.mostUsed?.categoryName || 'None'}</p>
-            <p className="text-sm text-slate-500">{stats.mostUsed?.productCount || 0} products</p>
+          <div className="rounded-3xl bg-white dark:bg-slate-800 p-5 shadow-lg shadow-slate-200/50 ring-1 ring-slate-200 dark:ring-slate-700">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Most used</p>
+            <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">{stats.mostUsed?.categoryName || 'None'}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{stats.mostUsed?.productCount || 0} products</p>
           </div>
         </div>
 
@@ -345,29 +345,29 @@ const Categories = () => {
         ) : null}
 
         <div className="flex flex-col gap-6 lg:flex-row">
-          <div className="w-full lg:w-1/3 rounded-4xl bg-white p-6 shadow-xl shadow-slate-200/50 ring-1 ring-slate-200">
-            <h3 className="text-xl font-semibold text-slate-900">{editingCategory ? 'Edit Category' : 'Add Category'}</h3>
-            <p className="mt-2 text-sm text-slate-500">Fill in the details and save the category record.</p>
+          <div className="w-full lg:w-1/3 rounded-4xl bg-white dark:bg-slate-800 p-6 shadow-xl shadow-slate-200/50 ring-1 ring-slate-200 dark:ring-slate-700">
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">{editingCategory ? 'Edit Category' : 'Add Category'}</h3>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Fill in the details and save the category record.</p>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-              <label className="block space-y-2 text-sm font-medium text-slate-700">
+              <label className="block space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
                 Category Name
                 <input
                   type="text"
                   required
                   placeholder="Category Name"
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
+                  className="w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 dark:text-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-blue-200"
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
                 />
               </label>
 
-              <label className="block space-y-2 text-sm font-medium text-slate-700">
+              <label className="block space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
                 Category Description
                 <input
                   type="text"
                   placeholder="Category Description"
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
+                  className="w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 dark:text-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-blue-200"
                   value={categoryDescription}
                   onChange={(e) => setCategoryDescription(e.target.value)}
                 />
@@ -386,7 +386,7 @@ const Categories = () => {
                   <button
                     type="button"
                     onClick={handleCancel}
-                    className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                    className="rounded-2xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:hover:bg-slate-600"
                   >
                     Cancel
                   </button>
@@ -395,17 +395,17 @@ const Categories = () => {
             </form>
           </div>
 
-          <div className="w-full lg:w-2/3 rounded-4xl bg-white p-6 shadow-xl shadow-slate-200/50 ring-1 ring-slate-200">
+          <div className="w-full lg:w-2/3 rounded-4xl bg-white dark:bg-slate-800 p-6 shadow-xl shadow-slate-200/50 ring-1 ring-slate-200 dark:ring-slate-700">
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="text-xl font-semibold text-slate-900">Category List</h3>
-                <p className="text-sm text-slate-500">{filteredCategories.length} categories matched your search</p>
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Category List</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{filteredCategories.length} categories matched your search</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={toggleSelectAll}
-                  className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  className="rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:hover:bg-slate-600"
                 >
                   {paginatedCategories.every((category) => selectedCategoryIds.includes(category._id)) ? 'Unselect all' : 'Select all'}
                 </button>
@@ -421,13 +421,13 @@ const Categories = () => {
             </div>
 
             {loading ? (
-              <div className="rounded-2xl bg-slate-50 p-8 text-center text-slate-500">Loading categories...</div>
+              <div className="rounded-2xl bg-slate-50 dark:bg-slate-700 p-8 text-center text-slate-500 dark:text-slate-400">Loading categories...</div>
             ) : paginatedCategories.length === 0 ? (
-              <div className="rounded-2xl bg-slate-50 p-8 text-center text-slate-500">No categories found. Add one to get started.</div>
+              <div className="rounded-2xl bg-slate-50 dark:bg-slate-700 p-8 text-center text-slate-500 dark:text-slate-400">No categories found. Add one to get started.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-200 text-sm">
-                  <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-600">
+                  <thead className="bg-slate-50 dark:bg-slate-700 text-left text-xs uppercase tracking-wide text-slate-600 dark:text-slate-400">
                     <tr>
                       <th className="px-4 py-4">
                         <input
@@ -443,16 +443,16 @@ const Categories = () => {
                       <th className="px-4 py-4">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200 bg-white">
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-800">
                     {paginatedCategories.map((category) => {
                       const badgeClass = category.productCount === 0
-                        ? 'bg-slate-100 text-slate-700'
+                        ? 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
                         : category.productCount < 3
                           ? 'bg-amber-100 text-amber-700'
                           : 'bg-emerald-100 text-emerald-700';
 
                       return (
-                        <tr key={category._id} className="hover:bg-slate-50">
+                        <tr key={category._id} className="hover:bg-slate-50 dark:hover:bg-slate-700">
                           <td className="px-4 py-4">
                             <input
                               type="checkbox"
@@ -462,8 +462,8 @@ const Categories = () => {
                             />
                           </td>
                           <td className="px-4 py-4">
-                            <div className="font-medium text-slate-900">{category.categoryName}</div>
-                            <div className="text-xs text-slate-500">{category.categoryDescription || 'No description'}</div>
+                            <div className="font-medium text-slate-900 dark:text-slate-100">{category.categoryName}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400">{category.categoryDescription || 'No description'}</div>
                           </td>
                           <td className="px-4 py-4">
                             <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${badgeClass}`}>
@@ -493,9 +493,11 @@ const Categories = () => {
                             <button
                               type="button"
                               onClick={() => handleDelete(category._id)}
-                              className="rounded-full bg-rose-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-600"
+                              disabled={category.productCount > 0}
+                              title={category.productCount > 0 ? 'Remove or reassign linked products before deleting this category.' : 'Delete category'}
+                              className="rounded-full bg-rose-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:bg-rose-300"
                             >
-                              Delete
+                              {category.productCount > 0 ? 'In use' : 'Delete'}
                             </button>
                           </td>
                         </tr>
@@ -507,7 +509,7 @@ const Categories = () => {
             )}
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Page {currentPage} of {totalPages}
               </p>
               <div className="flex gap-2">
@@ -515,7 +517,7 @@ const Categories = () => {
                   type="button"
                   onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Previous
                 </button>
@@ -523,7 +525,7 @@ const Categories = () => {
                   type="button"
                   onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Next
                 </button>

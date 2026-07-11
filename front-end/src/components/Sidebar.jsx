@@ -77,7 +77,7 @@ const Sidebar = () => {
     }, []);
 
     useEffect(() => {
-        if (!user) return;
+        if (!user) return undefined;
 
         const fetchAlerts = async () => {
             try {
@@ -91,7 +91,9 @@ const Sidebar = () => {
         };
 
         fetchAlerts();
-    }, [user, location.pathname]);
+        const interval = setInterval(fetchAlerts, 60000);
+        return () => clearInterval(interval);
+    }, [user]);
 
     const userInitials = useMemo(() => {
         if (!user?.name) return 'GU';

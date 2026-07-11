@@ -6,26 +6,33 @@ export const addCategory = async (req, res) => {
   try {
     const { categoryName, categoryDescription, isHidden = false } = req.body;
 
-    const existingCategory = await Category.findOne({ categoryName });
-    if (existingCategory) {
-      return res.json({ success: false, message: "category already exist" });
+    if (!categoryName || !categoryName.trim()) {
+      return res.status(400).json({ success: false, message: "Category name is required" });
     }
 
-    const newCategory = new Category({ categoryName, categoryDescription, isHidden });
+    const normalizedName = categoryName.trim().toLowerCase();
+    const existingCategory = await Category.findOne({ categoryName: { $regex: new RegExp(`^${normalizedName}$`, 'i') } });
+    if (existingCategory) {
+      return res.status(409).json({ success: false, message: "Category already exists" });
+    }
+
+    const newCategory = new Category({ categoryName: categoryName.trim(), categoryDescription, isHidden });
     await newCategory.save();
 
-    return res.json({ success: true, message: "category added successfully" });
+    return res.status(201).json({ success: true, message: "Category added successfully" });
   } catch (error) {
-    return res.json({ success: false, message: "server error" });
+    console.error('addCategory error:', error);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
 export const getCategories = async (req, res) => {
   try {
     const categories = await Category.find().sort({ categoryName: 1 });
-    return res.json({ success: true, categories });
+    return res.status(200).json({ success: true, categories });
   } catch (error) {
-    return res.json({ success: false, message: "server error" });
+    console.error('getCategories error:', error);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -34,19 +41,24 @@ export const updateCategory = async (req, res) => {
     const { id } = req.params;
     const { categoryName, categoryDescription, isHidden } = req.body;
 
-    const updatedCategory = await Category.findByIdAndUpdate(id, {
-      categoryName,
-      categoryDescription,
-      ...(typeof isHidden === 'boolean' ? { isHidden } : {})
-    });
-
-    if (!updatedCategory) {
-      return res.json({ success: false, message: "category not found" });
+    if (!categoryName || !categoryName.trim()) {
+      return res.status(400).json({ success: false, message: "Category name is required" });
     }
 
-    return res.json({ success: true, message: "category updated successfully" });
+    const updatedCategory = await Category.findByIdAndUpdate(id, {
+      categoryName: categoryName.trim(),
+      categoryDescription,
+      ...(typeof isHidden === 'boolean' ? { isHidden } : {})
+    }, { new: true });
+
+    if (!updatedCategory) {
+      return res.status(404).json({ success: false, message: "Category not found" });
+    }
+
+    return res.status(200).json({ success: true, message: "Category updated successfully" });
   } catch (error) {
-    return res.json({ success: false, message: "server error" });
+    console.error('updateCategory error:', error);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 

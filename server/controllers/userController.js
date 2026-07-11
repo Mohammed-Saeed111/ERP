@@ -105,11 +105,28 @@ export const getUsers = async (req, res) => {
 export const deleteUser = async (req, res) => {
     try {
         const { id } = req.params;
+
+        if (id === req.user._id.toString()) {
+            return res.status(400).json({ message: "Cannot delete your own account" });
+        }
+        
+        const userToDelete = await User.findById(id);
+        if (!userToDelete) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        if (userToDelete.role === 'admin') {
+            const adminCount = await User.countDocuments({ role: 'admin' });
+            if (adminCount <= 1) {
+                return res.status(400).json({ message: "Cannot delete the last admin account" });
+            }
+        }
         
         await User.findByIdAndDelete(id);
         
         res.status(200).json({ message: "User deleted successfully" });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: "Server error" });
     }
 };
@@ -122,7 +139,21 @@ export const bulkDeleteUsers = async (req, res) => {
             return res.status(400).json({ message: "No users selected for deletion" });
         }
 
-        await User.deleteMany({ _id: { $in: ids } });
+        const currentUserId = req.user._id.toString();
+        const filteredIds = ids.filter((id) => id !== currentUserId);
+
+        if (filteredIds.length === 0) {
+            return res.status(400).json({ message: "Cannot delete your own account" });
+        }
+
+        // Prevent deleting all admins
+        const adminCount = await User.countDocuments({ role: 'admin' });
+        const adminsToDelete = await User.countDocuments({ _id: { $in: filteredIds }, role: 'admin' });
+        if (adminsToDelete >= adminCount) {
+            return res.status(400).json({ message: "Cannot delete all admin accounts" });
+        }
+
+        await User.deleteMany({ _id: { $in: filteredIds } });
 
         res.status(200).json({ message: "Users deleted successfully" });
     } catch (error) {
@@ -175,13 +206,44 @@ export const getUserProfile = async (req, res) => {
     }
 };
 
+export const uploadAvatar = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No file uploaded' });
+        }
+        const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { avatar: avatarUrl },
+            { new: true }
+        ).select('-password');
+        return res.status(200).json({ success: true, user: updatedUser, message: 'Avatar updated successfully' });
+    } catch (error) {
+        console.error('Error uploading avatar', error);
+        return res.status(500).json({ success: false, message: 'Failed to upload avatar' });
+    }
+};
+
 export const updateUserProfile = async (req, res) => {
     try {
         const userId = req.user._id;
         
         const { name, email, address, password } = req.body;
 
-        const updateData = { name, email, address };
+        if (!name || !name.trim()) {
+            return res.status(400).json({ success: false, message: "Name is required" });
+        }
+        if (!email || !email.trim()) {
+            return res.status(400).json({ success: false, message: "Email is required" });
+        }
+
+        const existingUser = await User.findOne({ email: email.trim(), _id: { $ne: userId } });
+        if (existingUser) {
+            return res.status(400).json({ success: false, message: "Email already in use" });
+        }
+
+        const updateData = { name: name.trim(), email: email.trim(), address };
 
         if (password && password.trim() !== '') {
             const hashedPassword = await bcrypt.hash(password, 10);

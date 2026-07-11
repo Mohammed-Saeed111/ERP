@@ -14,18 +14,18 @@ const Alerts = () => {
         const orders = response.data.orders || [];
         const formatted = orders.map((order) => ({
           id: order._id,
-          title: `طلب جديد - ${order._id.slice(-6)}`,
-          description: `العميل: ${order.customer?.name || order.customer?.email || 'غير معروف'}. الحالة: ${order.status}.`,
-          date: order.orderDate ? new Date(order.orderDate).toLocaleString('ar-EG') : 'غير محدد',
+          title: `New Order - ${order._id.slice(-6)}`,
+          description: `Customer: ${order.customer?.name || order.customer?.email || 'Unknown'}. Status: ${order.status}.`,
+          date: order.orderDate ? new Date(order.orderDate).toLocaleString() : 'Unknown',
           status: order.status
         }));
         setAlerts(formatted);
       } else {
-        toast.error(response.data.message || 'فشل تحميل التنبيهات');
+        toast.error(response.data.message || 'Failed to load alerts');
       }
     } catch (error) {
       console.error(error);
-      toast.error('فشل تحميل التنبيهات');
+      toast.error('Failed to load alerts');
     } finally {
       setLoading(false);
     }
@@ -40,10 +40,10 @@ const Alerts = () => {
       <Toaster position="top-right" />
       <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">التنبيهات</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">عرض الطلبات المعلقة وأحدث التنبيهات في النظام.</p>
+          <h1 className="text-2xl font-semibold">Alerts</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">View pending orders and latest system alerts.</p>
         </div>
-        {loading && <span className="text-sm text-slate-500 dark:text-slate-400">جاري التحميل...</span>}
+        {loading && <span className="text-sm text-slate-500 dark:text-slate-400">Loading...</span>}
       </div>
 
       <div className="space-y-4">
@@ -62,7 +62,7 @@ const Alerts = () => {
           ))
         ) : (
           <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-6 text-center text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-            لا توجد تنبيهات حالياً.
+            No alerts at the moment.
           </div>
         )}
       </div>

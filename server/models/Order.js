@@ -53,12 +53,6 @@ const orderSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
-    product: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Product'
-    },
-    quantity: Number,
-    unitPrice: Number,
     status: {
         type: String,
         enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Canceled'],

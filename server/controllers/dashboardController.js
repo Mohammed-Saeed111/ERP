@@ -45,10 +45,11 @@ export const getDashboardData = async (req, res) => {
       .populate('categoryId', 'categoryName');
 
     const highestSaleResult = await Order.aggregate([
+      { $unwind: "$orderItems" },
       {
         $group: {
-          _id: "$product",
-          totalQuantity: { $sum: "$quantity" }
+          _id: "$orderItems.product",
+          totalQuantity: { $sum: "$orderItems.quantity" }
         }
       },
       { $sort: { totalQuantity: -1 } },
@@ -70,11 +71,11 @@ export const getDashboardData = async (req, res) => {
           as: "category"
         }
       },
-      { $unwind: "$category" },
+      { $unwind: { path: "$category", preserveNullAndEmpty: true } },
       {
         $project: {
           name: "$product.name",
-          category: "$category.categoryName",
+          category: { $ifNull: ["$category.categoryName", "Uncategorized"] },
           totalQuantity: 1
         }
       }

@@ -15,11 +15,9 @@ const supplierSchema = new mongoose.Schema({
   },
   address: {
     type: String,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  }
+}, {
+  timestamps: true
 });
 
 const Supplier = mongoose.model('Supplier', supplierSchema);

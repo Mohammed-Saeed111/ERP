@@ -1,21 +1,14 @@
 import Product from '../models/Product.js';
-import Category from '../models/Category.js';
-import Supplier from '../models/Supplier.js';
 
 export const getProducts = async (req, res) => {
   try {
-    const categories = await Category.find();
-    const suppliers = await Supplier.find();
-    
     const products = await Product.find({ isDeleted: false })
       .populate('categoryId')
       .populate('supplierId');
       
     return res.status(200).json({ 
       success: true, 
-      products, 
-      categories, 
-      suppliers 
+      products
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Error fetching records", error });

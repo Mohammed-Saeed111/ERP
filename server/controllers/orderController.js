@@ -2,6 +2,7 @@ import Product from '../models/Product.js';
 import Order from '../models/Order.js';
 
 const ORDER_STATUSES = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Canceled'];
+const UPDATABLE_ORDER_STATUSES = ORDER_STATUSES.filter((status) => status !== 'Canceled');
 
 const buildOrderItems = async (body) => {
     const items = [];
@@ -78,31 +79,29 @@ export const addOrder = async (req, res) => {
         const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
         const totalPrice = Number(items.reduce((sum, item) => sum + item.totalPrice, 0).toFixed(2));
 
-        // adjust stock for all products after validation
-        const updates = [];
-        for (const item of items) {
-            const product = productMap.get(item.product.toString());
-            product.stock -= item.quantity;
-            updates.push(product.save());
-        }
-        await Promise.all(updates);
+        // adjust stock for all products after validation using bulkWrite
+        await Product.bulkWrite(
+            items.map((item) => ({
+                updateOne: {
+                    filter: { _id: item.product },
+                    update: { $inc: { stock: -item.quantity } }
+                }
+            }))
+        );
 
         const orderObj = new Order({
             customer: userId,
             orderItems: items,
             totalQuantity,
             totalPrice,
-            status: 'Pending',
-            product: items[0].product,
-            quantity: items[0].quantity,
-            unitPrice: items[0].unitPrice
+            status: 'Pending'
         });
 
         await orderObj.save();
 
         return res.status(200).json({ success: true, message: 'Order added successfully', order: orderObj });
     } catch (error) {
-        console.log('Server error in adding order', error);
+        console.error('Server error in adding order', error);
         return res.status(500).json({ success: false, message: error.message || 'Server error in adding order' });
     }
 };
@@ -164,7 +163,7 @@ export const getOrders = async (req, res) => {
 
         return res.status(200).json({ success: true, orders: filteredOrders });
     } catch (error) {
-        console.log('Server error in fetching orders', error);
+        console.error('Server error in fetching orders', error);
         return res.status(500).json({ success: false, message: 'Server error in fetching orders' });
     }
 };
@@ -178,7 +177,7 @@ export const updateOrderStatus = async (req, res) => {
         const { id } = req.params;
         const { status } = req.body;
 
-        if (!status || !ORDER_STATUSES.includes(status)) {
+        if (!status || !UPDATABLE_ORDER_STATUSES.includes(status)) {
             return res.status(400).json({ success: false, message: 'Invalid order status' });
         }
 
@@ -207,7 +206,7 @@ export const updateOrderStatus = async (req, res) => {
 
         return res.status(200).json({ success: true, order: updatedOrder, message: 'Order status updated successfully' });
     } catch (error) {
-        console.log('Server error in updating order status', error);
+        console.error('Server error in updating order status', error);
         return res.status(500).json({ success: false, message: 'Server error in updating order status' });
     }
 };
@@ -228,16 +227,25 @@ export const cancelOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Order is already canceled' });
         }
 
-        const productIds = order.orderItems.map((item) => item.product);
-        const products = await Product.find({ _id: { $in: productIds } });
-        const productMap = new Map(products.map((prod) => [prod._id.toString(), prod]));
-        for (const item of order.orderItems) {
-            const product = productMap.get(item.product.toString());
-            if (product) {
-                product.stock += item.quantity;
-                await product.save();
-            }
+        const cancellableStatuses = req.user.role === 'admin'
+            ? ['Pending', 'Processing']
+            : ['Pending'];
+        if (!cancellableStatuses.includes(order.status)) {
+            return res.status(400).json({
+                success: false,
+                message: 'This order can no longer be canceled'
+            });
         }
+
+        // restore stock using bulkWrite
+        await Product.bulkWrite(
+            order.orderItems.map((item) => ({
+                updateOne: {
+                    filter: { _id: item.product },
+                    update: { $inc: { stock: item.quantity } }
+                }
+            }))
+        );
 
         order.status = 'Canceled';
         await order.save();
@@ -255,7 +263,7 @@ export const cancelOrder = async (req, res) => {
 
         return res.status(200).json({ success: true, order: updatedOrder, message: 'Order canceled and stock restored' });
     } catch (error) {
-        console.log('Server error in cancelling order', error);
+        console.error('Server error in cancelling order', error);
         return res.status(500).json({ success: false, message: 'Server error in cancelling order' });
     }
 };
@@ -290,11 +298,14 @@ export const restoreOrder = async (req, res) => {
             }
         }
 
-        for (const item of order.orderItems) {
-            const product = productMap.get(item.product.toString());
-            product.stock -= item.quantity;
-            await product.save();
-        }
+        await Product.bulkWrite(
+            order.orderItems.map((item) => ({
+                updateOne: {
+                    filter: { _id: item.product },
+                    update: { $inc: { stock: -item.quantity } }
+                }
+            }))
+        );
 
         order.status = 'Pending';
         await order.save();
@@ -312,7 +323,7 @@ export const restoreOrder = async (req, res) => {
 
         return res.status(200).json({ success: true, order: updatedOrder, message: 'Order restored and stock reserved' });
     } catch (error) {
-        console.log('Server error in restoring order', error);
+        console.error('Server error in restoring order', error);
         return res.status(500).json({ success: false, message: 'Server error in restoring order' });
     }
 };

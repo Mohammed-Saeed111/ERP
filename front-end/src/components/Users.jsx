@@ -1,4 +1,5 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { CSVLink } from 'react-csv';
 import toast, { Toaster } from 'react-hot-toast';
 import api from '../utils/axiosConfig';
@@ -11,20 +12,17 @@ const SORT_OPTIONS = [
   { label: 'Email', value: 'email' },
   { label: 'Last Login', value: 'lastLogin' }
 ];
+const EMPTY_FORM = { name: '', email: '', password: '', address: '', role: 'customer', status: 'active' };
 
 const Users = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    address: '',
-    role: 'customer',
-    status: 'active'
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
+  const [editFormData, setEditFormData] = useState(EMPTY_FORM);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [showAddPassword, setShowAddPassword] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false);
   const [query, setQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -60,39 +58,22 @@ const Users = () => {
     }
   };
 
-  const validateForm = (data) => {
-    if (!data.name.trim()) {
-      toast.error('Please enter a name');
-      return false;
-    }
-
-    if (!data.email.trim()) {
-      toast.error('Please enter an email');
-      return false;
-    }
-
-    if (!/^[\w-.]+@[\w-]+\.[a-zA-Z]{2,}$/.test(data.email)) {
-      toast.error('Please enter a valid email');
-      return false;
-    }
-
-    if (!activeEditUser && data.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return false;
-    }
-
+  const validateForm = (data, isEdit = false) => {
+    if (!data.name.trim()) { toast.error('Please enter a name'); return false; }
+    if (!data.email.trim()) { toast.error('Please enter an email'); return false; }
+    if (!/^[\w-.]+@[\w-]+\.[a-zA-Z]{2,}$/.test(data.email)) { toast.error('Please enter a valid email'); return false; }
+    if (!isEdit && data.password.length < 6) { toast.error('Password must be at least 6 characters'); return false; }
     return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm(formData)) return;
-
     setSaving(true);
     try {
       await api.post('/api/users/add', formData);
       toast.success('User added successfully');
-      setFormData({ name: '', email: '', password: '', address: '', role: 'customer', status: 'active' });
+      setFormData(EMPTY_FORM);
       await fetchUsers();
     } catch (error) {
       console.error(error);
@@ -103,8 +84,7 @@ const Users = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
-
+    if (!window.confirm('Are you sure you want to delete this user?')) return;
     setDeletingId(id);
     try {
       await api.delete(`/api/users/${id}`);
@@ -119,13 +99,8 @@ const Users = () => {
   };
 
   const handleBulkDelete = async () => {
-    if (selectedUsers.length === 0) {
-      toast.error('Select at least one user to delete');
-      return;
-    }
-
+    if (selectedUsers.length === 0) { toast.error('Select at least one user to delete'); return; }
     if (!window.confirm('Delete selected users?')) return;
-
     try {
       await api.delete('/api/users', { data: { ids: selectedUsers } });
       toast.success('Selected users deleted');
@@ -139,8 +114,7 @@ const Users = () => {
 
   const openEditModal = (user) => {
     setActiveEditUser(user);
-    setModalOpen(true);
-    setFormData({
+    setEditFormData({
       name: user.name || '',
       email: user.email || '',
       password: '',
@@ -148,19 +122,23 @@ const Users = () => {
       role: user.role || 'customer',
       status: user.status || 'active'
     });
+    setModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setModalOpen(false);
+    setActiveEditUser(null);
+    setEditFormData(EMPTY_FORM);
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    if (!validateForm(formData)) return;
-
+    if (!validateForm(editFormData, true)) return;
     setSaving(true);
     try {
-      await api.put(`/api/users/${activeEditUser._id}`, formData);
+      await api.put(`/api/users/${activeEditUser._id}`, editFormData);
       toast.success('User updated successfully');
-      setModalOpen(false);
-      setActiveEditUser(null);
-      setFormData({ name: '', email: '', password: '', address: '', role: 'customer', status: 'active' });
+      closeEditModal();
       await fetchUsers();
     } catch (error) {
       console.error(error);
@@ -197,7 +175,7 @@ const Users = () => {
     Address: user.address || '-',
     Role: user.role,
     Status: user.status,
-    'Last Login': user.lastLogin ? new Date(user.lastLogin).toLocaleString('ar-EG') : 'Never'
+    'Last Login': user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'
   }));
 
   return (
@@ -209,20 +187,11 @@ const Users = () => {
           <h1 className="text-2xl font-semibold">User Management</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">Manage users, roles, statuses, and export user data.</p>
         </div>
-
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={handleBulkDelete}
-            className="rounded-2xl bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600"
-          >
+          <button type="button" onClick={handleBulkDelete} className="rounded-2xl bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600">
             Delete selected
           </button>
-          <CSVLink
-            data={csvData}
-            filename="users-export.csv"
-            className="rounded-2xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-900"
-          >
+          <CSVLink data={csvData} filename="users-export.csv" className="rounded-2xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-900">
             Export CSV
           </CSVLink>
         </div>
@@ -235,41 +204,19 @@ const Users = () => {
           placeholder="Search users..."
           className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
         />
-        <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-        >
+        <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
           <option value="">All roles</option>
-          {ROLE_OPTIONS.map((role) => (
-            <option key={role} value={role}>{role}</option>
-          ))}
+          {ROLE_OPTIONS.map((role) => <option key={role} value={role}>{role}</option>)}
         </select>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-        >
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
           <option value="">All statuses</option>
-          {STATUSES.map((status) => (
-            <option key={status} value={status}>{status}</option>
-          ))}
+          {STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
         </select>
         <div className="grid gap-3 sm:grid-cols-2">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-          >
-            {SORT_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+            {SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
-          <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-            className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-          >
+          <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
             <option value="desc">Descending</option>
             <option value="asc">Ascending</option>
           </select>
@@ -302,14 +249,24 @@ const Users = () => {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Password</label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
-                placeholder="Minimum 6 characters"
-                className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-              />
+              <div className="relative">
+                <input
+                  type={showAddPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
+                  placeholder="Minimum 6 characters"
+                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 pr-12 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowAddPassword((p) => !p)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition"
+                  tabIndex={-1}
+                >
+                  {showAddPassword ? <FiEyeOff className="h-4 w-4" /> : <FiEye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Address</label>
@@ -330,9 +287,7 @@ const Users = () => {
                   onChange={(e) => setFormData((prev) => ({ ...prev, role: e.target.value }))}
                   className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                 >
-                  {ROLE_OPTIONS.map((role) => (
-                    <option key={role} value={role}>{role}</option>
-                  ))}
+                  {ROLE_OPTIONS.map((role) => <option key={role} value={role}>{role}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
@@ -343,9 +298,7 @@ const Users = () => {
                   onChange={(e) => setFormData((prev) => ({ ...prev, status: e.target.value }))}
                   className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                 >
-                  {STATUSES.map((status) => (
-                    <option key={status} value={status}>{status}</option>
-                  ))}
+                  {STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
                 </select>
               </div>
             </div>
@@ -366,18 +319,10 @@ const Users = () => {
               <p className="text-sm text-slate-500 dark:text-slate-400">{users.length} total users</p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => clearFilters()}
-                className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-              >
+              <button type="button" onClick={clearFilters} className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
                 Reset filters
               </button>
-              <CSVLink
-                data={csvData}
-                filename="users-export.csv"
-                className="rounded-2xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-900"
-              >
+              <CSVLink data={csvData} filename="users-export.csv" className="rounded-2xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-900">
                 Export full CSV
               </CSVLink>
             </div>
@@ -423,13 +368,10 @@ const Users = () => {
                         </span>
                       </td>
                       <td className="px-3 py-3 align-top text-slate-700 dark:text-slate-200">
-                        {user.lastLogin ? new Date(user.lastLogin).toLocaleString('ar-EG') : 'Never'}
+                        {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}
                       </td>
                       <td className="px-3 py-3 align-top space-x-2">
-                        <button
-                          onClick={() => openEditModal(user)}
-                          className="rounded-2xl bg-cyan-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-cyan-600"
-                        >
+                        <button onClick={() => openEditModal(user)} className="rounded-2xl bg-cyan-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-cyan-600">
                           Edit
                         </button>
                         <button
@@ -456,19 +398,9 @@ const Users = () => {
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-slate-500 dark:text-slate-400">Showing {filteredUsers.length} of {users.length} users</div>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                disabled={page === 1}
-                className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950"
-              >Prev</button>
+              <button type="button" onClick={() => setPage((prev) => Math.max(1, prev - 1))} disabled={page === 1} className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950">Prev</button>
               <span className="text-sm text-slate-600 dark:text-slate-400">{page} / {pages}</span>
-              <button
-                type="button"
-                onClick={() => setPage((prev) => Math.min(pages, prev + 1))}
-                disabled={page === pages}
-                className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950"
-              >Next</button>
+              <button type="button" onClick={() => setPage((prev) => Math.min(pages, prev + 1))} disabled={page === pages} className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950">Next</button>
             </div>
           </div>
         </section>
@@ -482,30 +414,26 @@ const Users = () => {
                 <h2 className="text-xl font-semibold">Edit user</h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400">Update name, email, role, or status.</p>
               </div>
-              <button
-                type="button"
-                onClick={() => { setModalOpen(false); setActiveEditUser(null); }}
-                className="text-slate-500 transition hover:text-slate-900 dark:hover:text-slate-100"
-              >Close</button>
+              <button type="button" onClick={closeEditModal} className="text-slate-500 transition hover:text-slate-900 dark:hover:text-slate-100">Close</button>
             </div>
 
             <form onSubmit={handleUpdate} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Name</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Name</label>
                   <input
                     type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                    value={editFormData.name}
+                    onChange={(e) => setEditFormData((prev) => ({ ...prev, name: e.target.value }))}
                     className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Email</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
                   <input
                     type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                    value={editFormData.email}
+                    onChange={(e) => setEditFormData((prev) => ({ ...prev, email: e.target.value }))}
                     className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                   />
                 </div>
@@ -513,65 +441,63 @@ const Users = () => {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Role</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Role</label>
                   <select
-                    value={formData.role}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, role: e.target.value }))}
+                    value={editFormData.role}
+                    onChange={(e) => setEditFormData((prev) => ({ ...prev, role: e.target.value }))}
                     className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                   >
-                    {ROLE_OPTIONS.map((role) => (
-                      <option key={role} value={role}>{role}</option>
-                    ))}
+                    {ROLE_OPTIONS.map((role) => <option key={role} value={role}>{role}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Status</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Status</label>
                   <select
-                    value={formData.status}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, status: e.target.value }))}
+                    value={editFormData.status}
+                    onChange={(e) => setEditFormData((prev) => ({ ...prev, status: e.target.value }))}
                     className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                   >
-                    {STATUSES.map((status) => (
-                      <option key={status} value={status}>{status}</option>
-                    ))}
+                    {STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700">Address</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Address</label>
                 <input
                   type="text"
-                  value={formData.address}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
+                  value={editFormData.address}
+                  onChange={(e) => setEditFormData((prev) => ({ ...prev, address: e.target.value }))}
                   className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700">Password</label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
-                  placeholder="Leave blank to keep current password"
-                  className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-                />
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
+                <div className="relative mt-2">
+                  <input
+                    type={showEditPassword ? 'text' : 'password'}
+                    value={editFormData.password}
+                    onChange={(e) => setEditFormData((prev) => ({ ...prev, password: e.target.value }))}
+                    placeholder="Leave blank to keep current password"
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 pr-12 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEditPassword((p) => !p)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition"
+                    tabIndex={-1}
+                  >
+                    {showEditPassword ? <FiEyeOff className="h-4 w-4" /> : <FiEye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               <div className="flex flex-wrap gap-3 pt-2">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="rounded-3xl bg-green-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
+                <button type="submit" disabled={saving} className="rounded-3xl bg-green-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60">
                   {saving ? 'Saving...' : 'Save changes'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => { setModalOpen(false); setActiveEditUser(null); }}
-                  className="rounded-3xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition"
-                >
+                <button type="button" onClick={closeEditModal} className="rounded-3xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition">
                   Cancel
                 </button>
               </div>

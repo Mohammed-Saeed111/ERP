@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { FiClipboard, FiLayers, FiShield, FiUserPlus } from 'react-icons/fi';
+import { FiClipboard, FiEye, FiEyeOff, FiLayers, FiShield, FiUserPlus } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../utils/axiosConfig';
 
 const Register = () => {
   const [form, setForm] = useState({ name: '', email: '', password: '', address: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -118,15 +119,25 @@ const Register = () => {
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-slate-700">Password</label>
-              <input
-                name="password"
-                type="password"
-                value={form.password}
-                onChange={handleChange}
-                className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                placeholder="Password"
-                required
-              />
+              <div className="relative">
+                <input
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={handleChange}
+                  className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  placeholder="Password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((p) => !p)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <FiEyeOff className="h-4 w-4" /> : <FiEye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
 
             <div className="space-y-2">

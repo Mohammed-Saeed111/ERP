@@ -22,6 +22,7 @@ import dashboardRoutes from './routes/dashboard.js';
 const app = express();
 
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Allow front-end dev servers on both default Vite ports and enable credentials
 const allowedOrigins = [
   'http://localhost:5173',
@@ -55,9 +56,17 @@ const ensureDefaultUsers = async () => {
   const defaultAdminEmail = 'admin@gmail.com';
   const defaultUserEmail = 'user@example.com';
 
+  const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD;
+  const userPassword = process.env.DEFAULT_USER_PASSWORD;
+
+  if (!adminPassword || !userPassword) {
+    console.error('DEFAULT_ADMIN_PASSWORD or DEFAULT_USER_PASSWORD not set in .env');
+    process.exit(1);
+  }
+
   const admin = await User.findOne({ email: defaultAdminEmail });
   if (!admin) {
-    const hashPassword = await bcrypt.hash('admin', 10);
+    const hashPassword = await bcrypt.hash(adminPassword, 10);
     await User.create({
       name: 'admin',
       email: defaultAdminEmail,
@@ -66,12 +75,12 @@ const ensureDefaultUsers = async () => {
       role: 'admin',
       status: 'active'
     });
-    console.log(`Default admin created: ${defaultAdminEmail} / admin`);
+    console.log(`Default admin created: ${defaultAdminEmail}`);
   }
 
   const customer = await User.findOne({ email: defaultUserEmail });
   if (!customer) {
-    const hashPassword = await bcrypt.hash('user', 10);
+    const hashPassword = await bcrypt.hash(userPassword, 10);
     await User.create({
       name: 'testuser',
       email: defaultUserEmail,
@@ -80,7 +89,7 @@ const ensureDefaultUsers = async () => {
       role: 'customer',
       status: 'active'
     });
-    console.log(`Default customer created: ${defaultUserEmail} / user`);
+    console.log(`Default customer created: ${defaultUserEmail}`);
   }
 };
 

@@ -57,14 +57,20 @@ export const deleteSupplier = async (req, res) => {
   try {
     const { id } = req.params;
 
+    const productLinked = await ProductModel.exists({ supplierId: id, isDeleted: false });
+    if (productLinked) {
+      return res.status(400).json({ success: false, message: 'Cannot delete supplier with associated products' });
+    }
+
     const deletedSupplier = await Supplier.findByIdAndDelete(id);
 
     if (!deletedSupplier) {
-      return res.status(404).json({ success: false, message: 'supplier not found' });
+      return res.status(404).json({ success: false, message: 'Supplier not found' });
     }
 
-    return res.json({ success: true, message: 'supplier deleted successfully' });
+    return res.status(200).json({ success: true, message: 'Supplier deleted successfully' });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'server error' });
+    console.error('deleteSupplier error:', error);
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
