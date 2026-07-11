@@ -77,7 +77,9 @@ const Profile = () => {
         } finally { setSubmitting(false); }
     };
 
-    const avatarSrc = user.avatar ? `http://localhost:5000${user.avatar}` : null;
+    const avatarSrc = user.avatar
+        ? (user.avatar.startsWith('http') ? user.avatar : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${user.avatar}`)
+        : null;
 
     const inputClass = "w-full rounded-3xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60";
 

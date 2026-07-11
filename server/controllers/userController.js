@@ -212,7 +212,7 @@ export const uploadAvatar = async (req, res) => {
         if (!req.file) {
             return res.status(400).json({ success: false, message: 'No file uploaded' });
         }
-        const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+        const avatarUrl = req.file.path;
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             { avatar: avatarUrl },
