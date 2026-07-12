@@ -71,7 +71,7 @@ export const getDashboardData = async (req, res) => {
           as: "category"
         }
       },
-      { $unwind: { path: "$category", preserveNullAndEmpty: true } },
+      { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
       {
         $project: {
           name: "$product.name",
