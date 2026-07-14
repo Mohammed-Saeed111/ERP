@@ -19,21 +19,21 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// ✅ root route (هيفتح على /api)
+// root
 app.get("/", (req, res) => {
   res.json({ message: "API is running 🚀" });
 });
 
-// routes
-app.use('/api/auth', authRouter);
-app.use('/api/category', categoryRoutes);
-app.use('/api/supplier', supplierRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/dashboard', dashboardRoutes);
+// ✅ routes بدون /api
+app.use('/auth', authRouter);
+app.use('/category', categoryRoutes);
+app.use('/supplier', supplierRoutes);
+app.use('/products', productRoutes);
+app.use('/users', userRoutes);
+app.use('/orders', orderRoutes);
+app.use('/dashboard', dashboardRoutes);
 
-// ✅ منع تكرار الاتصال
+// DB connection مرة واحدة
 let isConnected = false;
 
 async function connectOnce() {
@@ -43,7 +43,7 @@ async function connectOnce() {
   }
 }
 
-// ✅ handler لـ Vercel
+// handler
 export default async function handler(req, res) {
   await connectOnce();
   return app(req, res);
