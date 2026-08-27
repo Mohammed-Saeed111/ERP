@@ -24,7 +24,7 @@ app.use(
   })
 );
 
-// root
+// root health check
 app.get("/", (req, res) => {
   res.json({ message: "API is running 🚀" });
 });
@@ -38,19 +38,20 @@ app.use("/api/users", userRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
-// DB connection (مرة واحدة بس - serverless safe)
+// Serverless: connect on each cold start, cache the connection
 let isConnected = false;
 
-async function connectOnce() {
+const handler = async (req, res) => {
   if (!isConnected) {
-    await connectDB();
-    isConnected = true;
+    try {
+      await connectDB();
+      isConnected = true;
+    } catch (err) {
+      console.error("❌ DB Connection Failed:", err.message);
+      return res.status(500).json({ error: "Database connection failed" });
+    }
   }
-}
+  return app(req, res);
+};
 
-// Connect to DB then export handler for Vercel
-connectOnce().catch((err) => {
-  console.error("❌ DB Connection Failed:", err.message);
-});
-
-export default app;
+export default handler;
