@@ -15,10 +15,10 @@ dotenv.config();
 
 const app = express();
 
-// Trust Vercel's proxy (needed for rate limiting and IP detection)
-app.set('trust proxy', 1);
+// Trust Vercel proxy
+app.set("trust proxy", 1);
 
-// middlewares
+// Middlewares
 app.use(express.json());
 app.use(
   cors({
@@ -27,12 +27,12 @@ app.use(
   })
 );
 
-// root health check
+// Health check
 app.get("/", (req, res) => {
   res.json({ message: "API is running 🚀" });
 });
 
-// routes
+// Routes
 app.use("/api/auth", authRouter);
 app.use("/api/category", categoryRoutes);
 app.use("/api/supplier", supplierRoutes);
@@ -41,20 +41,10 @@ app.use("/api/users", userRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
-// Serverless: connect on each cold start, cache the connection
-let isConnected = false;
+// Connect to MongoDB once (cached between warm invocations)
+connectDB().catch((err) =>
+  console.error("❌ Initial DB connection error:", err.message)
+);
 
-const handler = async (req, res) => {
-  if (!isConnected) {
-    try {
-      await connectDB();
-      isConnected = true;
-    } catch (err) {
-      console.error("❌ DB Connection Failed:", err.message);
-      return res.status(500).json({ error: "Database connection failed" });
-    }
-  }
-  return app(req, res);
-};
-
-export default handler;
+// Export app directly — Vercel @vercel/node calls it as a handler
+export default app;
