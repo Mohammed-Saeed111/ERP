@@ -12,7 +12,8 @@ const loginLimiter = rateLimit({
     message: "Too many login attempts, try again later"
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  keyGenerator: (req) => req.headers['x-forwarded-for']?.split(',')[0] || req.ip || 'unknown',
 });
 
 router.post("/login", loginLimiter, login);

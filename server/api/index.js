@@ -15,6 +15,9 @@ dotenv.config();
 
 const app = express();
 
+// Trust Vercel's proxy (needed for rate limiting and IP detection)
+app.set('trust proxy', 1);
+
 // middlewares
 app.use(express.json());
 app.use(
