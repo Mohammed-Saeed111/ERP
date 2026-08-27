@@ -24,3 +24,5 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      - key: FRONTEND_URL
+        value: https://erp-client-sand.vercel.app

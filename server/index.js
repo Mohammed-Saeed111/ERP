@@ -17,7 +17,10 @@ const app = express();
 
 // middlewares
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "*",
+  credentials: true,
+}));
 
 // root
 app.get("/", (req, res) => {
@@ -25,13 +28,13 @@ app.get("/", (req, res) => {
 });
 
 // routes
-app.use("/auth", authRouter);
-app.use("/category", categoryRoutes);
-app.use("/supplier", supplierRoutes);
-app.use("/products", productRoutes);
-app.use("/users", userRoutes);
-app.use("/orders", orderRoutes);
-app.use("/dashboard", dashboardRoutes);
+app.use("/api/auth", authRouter);
+app.use("/api/category", categoryRoutes);
+app.use("/api/supplier", supplierRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // DB connection (مرة واحدة بس)
 let isConnected = false;
